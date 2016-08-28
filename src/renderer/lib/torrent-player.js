@@ -4,7 +4,10 @@ module.exports = {
   isAudio,
   isTorrent,
   isPlayableTorrentSummary,
-  pickFileToPlay
+  pickFileToPlay,
+  isInPlaylist,
+  getTrackNumber,
+  getPlaylistTrack
 }
 
 var path = require('path')
@@ -67,18 +70,44 @@ function pickFileToPlay (files) {
   // first, try to find the biggest video file
   var videoFiles = files.filter(isVideo)
   if (videoFiles.length > 0) {
-    var largestVideoFile = videoFiles.reduce(function (a, b) {
-      return a.length > b.length ? a : b
-    })
-    return files.indexOf(largestVideoFile)
+    var videoFile = largestFile(videoFiles)
+    return files.indexOf(videoFile)
   }
 
   // if there are no videos, play the first audio file
   var audioFiles = files.filter(isAudio)
   if (audioFiles.length > 0) {
-    return files.indexOf(audioFiles[0])
+    var firstTrack = isInPlaylist(audioFiles[0])
+      ? getPlaylistTrack(audioFiles, 1)
+      : audioFiles[0]
+    return files.indexOf(firstTrack)
   }
 
   // no video or audio means nothing is playable
   return undefined
+}
+
+function isInPlaylist (file) {
+  return !isNaN(getTrackNumber(file))
+}
+
+function getTrackNumber (file) {
+  if (!file.name) return
+  return parseInt(file.name.split(' ').shift(), 10)
+}
+
+function largestFile (files) {
+  return files.reduce(function (a, b) {
+    return a.length > b.length ? a : b
+  })
+}
+
+function getPlaylistTrack (files, number) {
+  return files.reduce((currentFile, file) => {
+    let trackNumber = getTrackNumber(file)
+    if (trackNumber === number) {
+      return file
+    }
+    return currentFile
+  }, undefined)
 }

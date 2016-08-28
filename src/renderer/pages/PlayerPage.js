@@ -104,11 +104,11 @@ function renderMedia (state) {
       )
     }
   }
-
   // Create the <audio> or <video> tag
   var MediaTagName = state.playing.type
   var mediaTag = (
     <MediaTagName
+      key={`${state.playing.infoHash}-${state.playing.fileIndex}`}
       src={state.server.localURL}
       onDoubleClick={dispatcher('toggleFullScreen')}
       onLoadedMetadata={onLoadedMetadata}
@@ -147,6 +147,7 @@ function renderMedia (state) {
   // When the video completes, pause the video instead of looping
   function onEnded (e) {
     state.playing.isPaused = true
+    dispatch('mediaEnded', Object.assign({}, state.playing))
   }
 
   function onCanPlay (e) {

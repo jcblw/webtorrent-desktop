@@ -26,7 +26,13 @@ module.exports = class PlaybackController {
   // * Stream, if not already fully downloaded
   // * If no file index is provided, pick the default file to play
   playFile (infoHash, index /* optional */) {
-    this.state.location.go({
+    var location = this.state.location
+    if (location.url() === 'player') {
+      this.play()
+      this.openPlayer(infoHash, index, function () {})
+      return
+    }
+    location.go({
       url: 'player',
       setup: (cb) => {
         this.play()
@@ -301,6 +307,20 @@ module.exports = class PlaybackController {
     ipcRenderer.send('onPlayerClose')
 
     this.update()
+  }
+
+  playlistNext (lastPlayed) {
+    var infoHash = lastPlayed.infoHash
+    var torrentSummary = TorrentSummary.getByKey(this.state, infoHash)
+    var lastTrack = torrentSummary.files[lastPlayed.fileIndex]
+    var nextTrack = TorrentPlayer.getPlaylistTrack(
+      torrentSummary.files.filter(TorrentPlayer.isInPlaylist),
+      TorrentPlayer.getTrackNumber(lastTrack) + 1
+    )
+
+    if (nextTrack) {
+      dispatch('playFile', infoHash, torrentSummary.files.indexOf(nextTrack))
+    }
   }
 }
 

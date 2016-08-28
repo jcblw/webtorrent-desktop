@@ -194,6 +194,7 @@ const dispatchHandlers = {
   'changeVolume': (delta) => controllers.playback.changeVolume(delta),
   'setVolume': (vol) => controllers.playback.setVolume(vol),
   'openItem': (infoHash, index) => controllers.playback.openItem(infoHash, index),
+  'mediaEnded': (lastPlayed) => controllers.playback.playlistNext(lastPlayed),
 
   // Subtitles
   'openSubtitles': () => controllers.subtitles.openSubtitles(),

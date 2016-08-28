@@ -307,22 +307,27 @@ function startServer (infoHash, index) {
   else torrent.once('ready', () => startServerFromReadyTorrent(torrent, index))
 }
 
+function broadcastServerInfo (torrent, index) {
+  var port = server.address().port
+  var urlSuffix = ':' + port + '/' + index
+  var info = {
+    torrentKey: torrent.key,
+    localURL: 'http://localhost' + urlSuffix,
+    networkURL: 'http://' + networkAddress() + urlSuffix
+  }
+
+  ipc.send('wt-server-running', info)
+  ipc.send('wt-server-' + torrent.infoHash, info) // TODO: hack
+}
+
 function startServerFromReadyTorrent (torrent, index, cb) {
-  if (server) return
+  // still broadcast info cause maybe the index changed
+  if (server) return broadcastServerInfo(torrent, index)
 
   // start the streaming torrent-to-http server
   server = torrent.createServer()
   server.listen(0, function () {
-    var port = server.address().port
-    var urlSuffix = ':' + port + '/' + index
-    var info = {
-      torrentKey: torrent.key,
-      localURL: 'http://localhost' + urlSuffix,
-      networkURL: 'http://' + networkAddress() + urlSuffix
-    }
-
-    ipc.send('wt-server-running', info)
-    ipc.send('wt-server-' + torrent.infoHash, info) // TODO: hack
+    broadcastServerInfo(torrent, index)
   })
 }
 
